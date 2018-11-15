@@ -1,11 +1,3 @@
-//
-//  AppDelegate.swift
-//  HalfModal
-//
-//  Created by Takahiro Nishinobu on 2018/11/15.
-//  Copyright © 2018 hachinobu. All rights reserved.
-//
-
 import UIKit
 
 @UIApplicationMain

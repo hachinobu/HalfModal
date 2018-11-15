@@ -8,11 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		AD147DAC219D93250035AAAD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD147DAB219D93250035AAAD /* AppDelegate.swift */; };
-		AD147DAE219D93250035AAAD /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD147DAD219D93250035AAAD /* ViewController.swift */; };
 		AD147DB1219D93250035AAAD /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AD147DAF219D93250035AAAD /* Main.storyboard */; };
 		AD147DB3219D93270035AAAD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AD147DB2219D93270035AAAD /* Assets.xcassets */; };
 		AD147DB6219D93270035AAAD /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AD147DB4219D93270035AAAD /* LaunchScreen.storyboard */; };
 		AD147DC1219D93270035AAAD /* HalfModalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD147DC0219D93270035AAAD /* HalfModalTests.swift */; };
+		AD147DCC219D98B50035AAAD /* HalfModalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD147DCB219D98B50035AAAD /* HalfModalViewController.swift */; };
+		AD147DCE219DA7EF0035AAAD /* InstantPanGestureRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD147DCD219DA7EF0035AAAD /* InstantPanGestureRecognizer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,7 +29,6 @@
 /* Begin PBXFileReference section */
 		AD147DA8219D93250035AAAD /* HalfModal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HalfModal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD147DAB219D93250035AAAD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		AD147DAD219D93250035AAAD /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		AD147DB0219D93250035AAAD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		AD147DB2219D93270035AAAD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AD147DB5219D93270035AAAD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -36,6 +36,8 @@
 		AD147DBC219D93270035AAAD /* HalfModalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HalfModalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD147DC0219D93270035AAAD /* HalfModalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HalfModalTests.swift; sourceTree = "<group>"; };
 		AD147DC2219D93270035AAAD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AD147DCB219D98B50035AAAD /* HalfModalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HalfModalViewController.swift; sourceTree = "<group>"; };
+		AD147DCD219DA7EF0035AAAD /* InstantPanGestureRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantPanGestureRecognizer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,7 +80,8 @@
 			isa = PBXGroup;
 			children = (
 				AD147DAB219D93250035AAAD /* AppDelegate.swift */,
-				AD147DAD219D93250035AAAD /* ViewController.swift */,
+				AD147DCB219D98B50035AAAD /* HalfModalViewController.swift */,
+				AD147DCD219DA7EF0035AAAD /* InstantPanGestureRecognizer.swift */,
 				AD147DAF219D93250035AAAD /* Main.storyboard */,
 				AD147DB2219D93270035AAAD /* Assets.xcassets */,
 				AD147DB4219D93270035AAAD /* LaunchScreen.storyboard */,
@@ -197,8 +200,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AD147DAE219D93250035AAAD /* ViewController.swift in Sources */,
+				AD147DCC219D98B50035AAAD /* HalfModalViewController.swift in Sources */,
 				AD147DAC219D93250035AAAD /* AppDelegate.swift in Sources */,
+				AD147DCE219DA7EF0035AAAD /* InstantPanGestureRecognizer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
