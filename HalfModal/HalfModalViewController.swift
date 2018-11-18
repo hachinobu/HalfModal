@@ -12,7 +12,6 @@ class HalfModalViewController: UIViewController {
         case open(Position)
     }
     
-    private var test = false
     private let modalViewHeight: CGFloat = 500
     private lazy var maxDistance: CGFloat = self.modalViewHeight - 60
     private lazy var middleModalPoint: CGFloat = 200
@@ -20,7 +19,7 @@ class HalfModalViewController: UIViewController {
     private var modalAnimator = UIViewPropertyAnimator()
     private var animationProgress: CGFloat = 0.0
     private var remainigMiddleDistance: CGFloat = 0.0
-    private var isMiddlePosition = false
+    private var isCommingMiddle = false
     private var currentState: State = .closed(.bottom)
     private lazy var modalPanRecognizer: InstantPanGestureRecognizer = {
         let panRecognizer = InstantPanGestureRecognizer()
@@ -60,11 +59,7 @@ class HalfModalViewController: UIViewController {
     }
     
     private func generateModalAnimator(duration: TimeInterval) {
-        if test {
-            return
-        }
-        test = true
-        let animator = UIViewPropertyAnimator(duration: duration, dampingRatio: 0.5) { [weak self] in
+        let animator = UIViewPropertyAnimator(duration: 10, dampingRatio: 0.9) { [weak self] in
             guard let self = self else { return }
             switch self.currentState {
             case .open:
@@ -109,7 +104,6 @@ class HalfModalViewController: UIViewController {
             }
             self.view.layoutIfNeeded()
         }
-        animator.pausesOnCompletion = true
         modalAnimator = animator
     }
     
@@ -117,16 +111,22 @@ class HalfModalViewController: UIViewController {
         switch recognizer.state {
         case .began:
             if modalAnimator.isRunning {
-                if isMiddlePosition {
+                modalAnimator.pauseAnimation()
+                if isCommingMiddle {
                     let currentDistance: CGFloat
                     switch currentState {
-                    case .closed(_):
+                    case .closed:
                         currentDistance = maxDistance - (remainigMiddleDistance * (1 - modalAnimator.fractionComplete)) - middleModalPoint
-                    case .open(_):
+                        modalBottomConstraint.constant = maxDistance
+                    case .open:
                         currentDistance = (middleModalPoint - remainigMiddleDistance) + remainigMiddleDistance * modalAnimator.fractionComplete
+                        modalBottomConstraint.constant = 0
                     }
                     animationProgress = currentDistance / maxDistance
-                    isMiddlePosition = false
+                    isCommingMiddle = false
+                    modalAnimator.stopAnimation(false)
+                    modalAnimator.finishAnimation(at: .current)
+                    generateModalAnimator(duration: 1)
                 } else {
                     animationProgress = modalAnimator.isReversed ? 1 - modalAnimator.fractionComplete : modalAnimator.fractionComplete
                 }
@@ -159,7 +159,33 @@ class HalfModalViewController: UIViewController {
                 }
             }
         case .ended:
-            modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 1)
+            if 0.2...0.6 ~= modalAnimator.fractionComplete {
+                modalAnimator.pauseAnimation()
+                remainigMiddleDistance = maxDistance - (maxDistance * modalAnimator.fractionComplete) - middleModalPoint
+                modalAnimator.stopAnimation(false)
+                modalAnimator.finishAnimation(at: .current)
+                modalAnimator.addAnimations {
+                    self.modalBottomConstraint.constant = self.middleModalPoint
+                    self.view.layoutIfNeeded()
+                }
+                modalAnimator.addCompletion { [weak self] position in
+                    guard let self = self else { return }
+                    self.isCommingMiddle = false
+                    switch position {
+                    case .end:
+                        self.currentState = .closed(.middle)
+                        self.modalBottomConstraint.constant = self.middleModalPoint
+                    case .start, .current: ()
+                    }
+                    self.view.layoutIfNeeded()
+                }
+                isCommingMiddle = true
+                modalAnimator.startAnimation()
+                modalAnimator.pauseAnimation()
+                modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 3)
+            } else {
+                modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 1)
+            }
         default: ()
         }
     }
