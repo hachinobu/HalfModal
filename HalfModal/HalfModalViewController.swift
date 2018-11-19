@@ -3,13 +3,32 @@ import UIKit
 class HalfModalViewController: UIViewController {
     
     private enum State {
-        enum Position {
-            case top
-            case middle
-            case bottom
+        case top
+        case middle
+        case bottom
+        
+        func bottomBorder() -> CGFloat {
+            switch self {
+            case .top:
+                return 0.35
+            case .bottom:
+                return 0.2
+            case .middle:
+                fatalError()
+            }
         }
-        case closed(Position)
-        case open(Position)
+        
+        func middleBorder() -> CGFloat {
+            switch self {
+            case .top:
+                return 0.8
+            case .bottom:
+                return 0.65
+            case .middle:
+                fatalError()
+            }
+        }
+        
     }
     
     private let modalViewHeight: CGFloat = UIScreen.main.bounds.height - 64
@@ -20,7 +39,7 @@ class HalfModalViewController: UIViewController {
     private var animationProgress: CGFloat = 0.0
     private var remainigMiddleDistance: CGFloat = 0.0
     private var isCommingMiddle = false
-    private var currentState: State = .closed(.bottom)
+    private var currentState: State = .bottom
     private lazy var modalPanRecognizer: InstantPanGestureRecognizer = {
         let panRecognizer = InstantPanGestureRecognizer()
         panRecognizer.addTarget(self, action: #selector(self.modalViewPanned(recognizer:)))
@@ -62,43 +81,44 @@ class HalfModalViewController: UIViewController {
         let animator = UIViewPropertyAnimator(duration: 10, dampingRatio: 0.9) { [weak self] in
             guard let self = self else { return }
             switch self.currentState {
-            case .open:
-                self.modalBottomConstraint.constant = self.maxDistance
-            case .closed:
+            case .bottom:
                 self.modalBottomConstraint.constant = 0
+            case .top:
+                self.modalBottomConstraint.constant = self.maxDistance
+            case .middle: fatalError()
             }
             self.view.layoutIfNeeded()
         }
         animator.addCompletion { [weak self] position in
             guard let self = self else { return }
-            if case .closed(.bottom) = self.currentState {
+            if case .bottom = self.currentState {
                 switch position {
                 case .start:
                     self.modalBottomConstraint.constant = self.maxDistance
-                    self.currentState = .closed(.bottom)
+                    self.currentState = .bottom
                 case .end:
                     self.modalBottomConstraint.constant = 0
-                    self.currentState = .open(.top)
+                    self.currentState = .top
                 case .current: ()
                 }
-            } else if case .closed(.middle) = self.currentState {
+            } else if case .middle = self.currentState {
                 switch position {
                 case .start:
                     self.modalBottomConstraint.constant = self.maxDistance
-                    self.currentState = .closed(.bottom)
+                    self.currentState = .bottom
                 case .end:
                     self.modalBottomConstraint.constant = 0
-                    self.currentState = .open(.top)
+                    self.currentState = .top
                 case .current: ()
                 }
-            } else if case .open(.top) = self.currentState {
+            } else if case .top = self.currentState {
                 switch position {
                 case .start:
                     self.modalBottomConstraint.constant = 0
-                    self.currentState = .open(.top)
+                    self.currentState = .top
                 case .end:
                     self.modalBottomConstraint.constant = self.maxDistance
-                    self.currentState = .closed(.bottom)
+                    self.currentState = .bottom
                 case .current: ()
                 }
             }
@@ -115,12 +135,13 @@ class HalfModalViewController: UIViewController {
                 if isCommingMiddle {
                     let currentDistance: CGFloat
                     switch currentState {
-                    case .closed:
+                    case .bottom:
                         currentDistance = maxDistance - (remainigMiddleDistance * (1 - modalAnimator.fractionComplete)) - middleModalPoint
                         modalBottomConstraint.constant = maxDistance
-                    case .open:
+                    case .top:
                         currentDistance = (middleModalPoint - remainigMiddleDistance) + remainigMiddleDistance * modalAnimator.fractionComplete
                         modalBottomConstraint.constant = 0
+                    case .middle: fatalError()
                     }
                     animationProgress = currentDistance / maxDistance
                     isCommingMiddle = false
@@ -131,8 +152,8 @@ class HalfModalViewController: UIViewController {
                     animationProgress = modalAnimator.isReversed ? 1 - modalAnimator.fractionComplete : modalAnimator.fractionComplete
                     if modalAnimator.isReversed { modalAnimator.isReversed.toggle() }
                 }
-            } else if case .closed(.middle) = currentState {
-                currentState = .closed(.bottom)
+            } else if case .middle = currentState {
+                currentState = .bottom
                 modalBottomConstraint.constant = maxDistance
                 view.layoutIfNeeded()
                 animationProgress = (maxDistance - middleModalPoint) / maxDistance
@@ -148,25 +169,24 @@ class HalfModalViewController: UIViewController {
             
         case .changed:
             let translation = recognizer.translation(in: modalView)
-            if case .closed(.middle) = currentState {
+            if case .middle = currentState {
                 let fraction = -translation.y / maxDistance + animationProgress
                 modalAnimator.fractionComplete = fraction
             } else {
                 switch currentState {
-                case .closed:
+                case .bottom:
                     modalAnimator.fractionComplete = -translation.y / maxDistance + animationProgress
-                case .open:
+                case .top:
                     modalAnimator.fractionComplete = translation.y / maxDistance + animationProgress
+                case .middle: fatalError()
                 }
             }
             print(modalAnimator.fractionComplete)
         case .ended:
-            let bottomRange = calcBottomRange(state: currentState)
-            let middleRange = calcMiddleRange(state: currentState)
-            if ..<bottomRange.max ~= modalAnimator.fractionComplete {
+            if ..<currentState.bottomBorder() ~= modalAnimator.fractionComplete {
                 modalAnimator.isReversed = true
                 modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 1)
-            } else if middleRange.min...middleRange.max ~= modalAnimator.fractionComplete {
+            } else if ..<currentState.middleBorder() ~= modalAnimator.fractionComplete {
                 modalAnimator.pauseAnimation()
                 remainigMiddleDistance = maxDistance - (maxDistance * modalAnimator.fractionComplete) - middleModalPoint
                 modalAnimator.stopAnimation(false)
@@ -180,7 +200,7 @@ class HalfModalViewController: UIViewController {
                     self.isCommingMiddle = false
                     switch position {
                     case .end:
-                        self.currentState = .closed(.middle)
+                        self.currentState = .middle
                         self.modalBottomConstraint.constant = self.middleModalPoint
                     case .start, .current: ()
                     }
@@ -194,20 +214,6 @@ class HalfModalViewController: UIViewController {
                 modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 1)
             }
         default: ()
-        }
-    }
-    
-    private func calcBottomRange(state: State) -> (min: CGFloat, max: CGFloat) {
-        switch state {
-        case .closed: return (0.0, 0.2)
-        case .open: return (0.0, 0.35)
-        }
-    }
-    
-    private func calcMiddleRange(state: State) -> (min: CGFloat, max: CGFloat) {
-        switch state {
-        case .closed: return (0.2, 0.65)
-        case .open: return (0.35, 0.8)
         }
     }
 
