@@ -12,9 +12,9 @@ class HalfModalViewController: UIViewController {
         case open(Position)
     }
     
-    private let modalViewHeight: CGFloat = 500
+    private let modalViewHeight: CGFloat = UIScreen.main.bounds.height - 64
     private lazy var maxDistance: CGFloat = self.modalViewHeight - 60
-    private lazy var middleModalPoint: CGFloat = 200
+    private lazy var middleModalPoint: CGFloat = self.maxDistance * 0.7
     private var modalBottomConstraint = NSLayoutConstraint()
     private var modalAnimator = UIViewPropertyAnimator()
     private var animationProgress: CGFloat = 0.0
@@ -129,6 +129,7 @@ class HalfModalViewController: UIViewController {
                     generateModalAnimator(duration: 1)
                 } else {
                     animationProgress = modalAnimator.isReversed ? 1 - modalAnimator.fractionComplete : modalAnimator.fractionComplete
+                    if modalAnimator.isReversed { modalAnimator.isReversed.toggle() }
                 }
             } else if case .closed(.middle) = currentState {
                 currentState = .closed(.bottom)
@@ -141,9 +142,9 @@ class HalfModalViewController: UIViewController {
                 generateModalAnimator(duration: 1)
             }
             
-            modalAnimator.fractionComplete = animationProgress
             modalAnimator.startAnimation()
             modalAnimator.pauseAnimation()
+            modalAnimator.fractionComplete = animationProgress
             
         case .changed:
             let translation = recognizer.translation(in: modalView)
@@ -158,8 +159,14 @@ class HalfModalViewController: UIViewController {
                     modalAnimator.fractionComplete = translation.y / maxDistance + animationProgress
                 }
             }
+            print(modalAnimator.fractionComplete)
         case .ended:
-            if 0.2...0.6 ~= modalAnimator.fractionComplete {
+            let bottomRange = calcBottomRange(state: currentState)
+            let middleRange = calcMiddleRange(state: currentState)
+            if ..<bottomRange.max ~= modalAnimator.fractionComplete {
+                modalAnimator.isReversed = true
+                modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 1)
+            } else if middleRange.min...middleRange.max ~= modalAnimator.fractionComplete {
                 modalAnimator.pauseAnimation()
                 remainigMiddleDistance = maxDistance - (maxDistance * modalAnimator.fractionComplete) - middleModalPoint
                 modalAnimator.stopAnimation(false)
@@ -182,11 +189,25 @@ class HalfModalViewController: UIViewController {
                 isCommingMiddle = true
                 modalAnimator.startAnimation()
                 modalAnimator.pauseAnimation()
-                modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 3)
+                modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 1)
             } else {
                 modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 1)
             }
         default: ()
+        }
+    }
+    
+    private func calcBottomRange(state: State) -> (min: CGFloat, max: CGFloat) {
+        switch state {
+        case .closed: return (0.0, 0.2)
+        case .open: return (0.0, 0.35)
+        }
+    }
+    
+    private func calcMiddleRange(state: State) -> (min: CGFloat, max: CGFloat) {
+        switch state {
+        case .closed: return (0.2, 0.65)
+        case .open: return (0.35, 0.8)
         }
     }
 
