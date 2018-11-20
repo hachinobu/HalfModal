@@ -180,17 +180,12 @@ class HalfModalViewController: UIViewController {
             
         case .changed:
             let translation = recognizer.translation(in: modalView)
-            if case .middle = currentState {
-                let fraction = -translation.y / maxDistance + animationProgress
-                modalAnimator.fractionComplete = fraction
-            } else {
-                switch currentState {
-                case .bottom:
-                    modalAnimator.fractionComplete = -translation.y / maxDistance + animationProgress
-                case .top:
-                    modalAnimator.fractionComplete = translation.y / maxDistance + animationProgress
-                case .middle: fatalError()
-                }
+            switch currentState {
+            case .bottom:
+                modalAnimator.fractionComplete = -translation.y / maxDistance + animationProgress
+            case .top:
+                modalAnimator.fractionComplete = translation.y / maxDistance + animationProgress
+            case .middle: fatalError()
             }
 //            print(modalAnimator.fractionComplete)
         case .ended:
