@@ -7,23 +7,34 @@ class HalfModalViewController: UIViewController {
         case middle
         case bottom
         
-        func bottomBorder() -> CGFloat {
+        func isBottomArea(point: CGFloat) -> Bool {
             switch self {
-            case .top:
-                return 0.35
             case .bottom:
-                return 0.2
+                return 0.0..<0.2 ~= point
+            case .top:
+                return 0.0..<0.35 ~= point
             case .middle:
                 fatalError()
             }
         }
         
-        func middleBorder() -> CGFloat {
+        func isMiddleArea(point: CGFloat) -> Bool {
             switch self {
-            case .top:
-                return 0.8
             case .bottom:
-                return 0.65
+                return 0.2..<0.65 ~= point
+            case .top:
+                return 0.35..<0.8 ~= point
+            case .middle:
+                fatalError()
+            }
+        }
+        
+        func isTopArea(point: CGFloat) -> Bool {
+            switch self {
+            case .bottom:
+                return 0.65... ~= point
+            case .top:
+                return 0.8... ~= point
             case .middle:
                 fatalError()
             }
@@ -183,10 +194,11 @@ class HalfModalViewController: UIViewController {
             }
             print(modalAnimator.fractionComplete)
         case .ended:
-            if ..<currentState.bottomBorder() ~= modalAnimator.fractionComplete {
+            let fractionComplete = modalAnimator.fractionComplete
+            if currentState.isBottomArea(point: fractionComplete) {
                 modalAnimator.isReversed = true
                 modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 1)
-            } else if ..<currentState.middleBorder() ~= modalAnimator.fractionComplete {
+            } else if currentState.isMiddleArea(point: fractionComplete) {
                 modalAnimator.pauseAnimation()
                 remainigMiddleDistance = maxDistance - (maxDistance * modalAnimator.fractionComplete) - middleModalPoint
                 modalAnimator.stopAnimation(false)
@@ -210,7 +222,7 @@ class HalfModalViewController: UIViewController {
                 modalAnimator.startAnimation()
                 modalAnimator.pauseAnimation()
                 modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 1)
-            } else {
+            } else if currentState.isTopArea(point: fractionComplete) {
                 modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 1)
             }
         default: ()
