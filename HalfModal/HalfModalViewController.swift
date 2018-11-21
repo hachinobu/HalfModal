@@ -7,34 +7,34 @@ class HalfModalViewController: UIViewController {
         case middle
         case bottom
         
-        func isBottomArea(point: CGFloat, velocity: CGPoint) -> Bool {
+        func isBeginningArea(point: CGFloat, velocity: CGPoint, middleFractionPoint: CGFloat) -> Bool {
             switch self {
             case .bottom:
-                return 0.0..<0.2 ~= point && velocity.y >= 0.0
+                return velocity.y > 300 || 0.0..<0.2 ~= point && velocity.y >= 0.0 || middleFractionPoint >= point && velocity.y > 0
             case .top:
-                return 0.0..<0.35 ~= point && velocity.y <= 0.0
+                return velocity.y < 0.0 || 0.0..<0.35 ~= point && velocity.y <= 0.0 || middleFractionPoint >= point && velocity.y < 0.0
             case .middle:
                 fatalError()
             }
         }
         
-        func isMiddleArea(point: CGFloat) -> Bool {
-            switch self {
-            case .bottom:
-                return 0.2..<0.65 ~= point
-            case .top:
-                return 0.35..<0.8 ~= point
-            case .middle:
-                fatalError()
-            }
-        }
+//        func isMiddleArea(point: CGFloat, velocity: CGPoint) -> Bool {
+//            switch self {
+//            case .bottom:
+//                return 0.2..<0.65 ~= point
+//            case .top:
+//                return 0.35..<0.8 ~= point
+//            case .middle:
+//                fatalError()
+//            }
+//        }
         
-        func isTopArea(point: CGFloat, velocity: CGPoint) -> Bool {
+        func isEndArea(point: CGFloat, velocity: CGPoint, middleFractionPoint: CGFloat) -> Bool {
             switch self {
             case .bottom:
-                return 0.65... ~= point || velocity.y < -300
+                return velocity.y < -300 || 0.65... ~= point && velocity.y <= 0 || middleFractionPoint <= point && velocity.y < 0
             case .top:
-                return 0.8... ~= point || velocity.y > 300
+                return velocity.y > 300 || 0.8... ~= point && velocity.y >= 0 || middleFractionPoint <= point && velocity.y > 0
             case .middle:
                 fatalError()
             }
@@ -43,8 +43,15 @@ class HalfModalViewController: UIViewController {
     }
     
     private let modalViewHeight: CGFloat = UIScreen.main.bounds.height - 64
-    private lazy var maxDistance: CGFloat = self.modalViewHeight - 60
-    private lazy var middleModalPoint: CGFloat = self.maxDistance * 0.7
+    private var maxDistance: CGFloat {
+        return modalViewHeight - 60
+    }
+    private var middleModalPoint: CGFloat {
+        return maxDistance * 0.7
+    }
+    private var middleFractionPoint: CGFloat {
+        return (maxDistance - middleModalPoint) / maxDistance
+    }
     private var modalBottomConstraint = NSLayoutConstraint()
     private var modalAnimator = UIViewPropertyAnimator()
     private var animationProgress: CGFloat = 0.0
@@ -187,14 +194,28 @@ class HalfModalViewController: UIViewController {
                 modalAnimator.fractionComplete = translation.y / maxDistance + animationProgress
             case .middle: fatalError()
             }
-//            print(modalAnimator.fractionComplete)
+            print(modalAnimator.fractionComplete)
         case .ended:
             let fractionComplete = modalAnimator.fractionComplete
             let velocity = recognizer.velocity(in: modalView)
-            if currentState.isBottomArea(point: fractionComplete, velocity: velocity) {
+//            print(fractionComplete)
+            print(velocity)
+            if currentState.isBeginningArea(point: fractionComplete, velocity: velocity, middleFractionPoint: middleFractionPoint) {
                 modalAnimator.isReversed = true
                 modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 1)
-            } else if currentState.isMiddleArea(point: fractionComplete) {
+            } else if currentState.isEndArea(point: fractionComplete, velocity: velocity, middleFractionPoint: middleFractionPoint) {
+                let remainingDistance = maxDistance - (maxDistance * modalAnimator.fractionComplete)
+                let velocityVector = (remainingDistance != 0) ? CGVector(dx: 0, dy: velocity.y/remainingDistance) : .zero
+                let spring = UISpringTimingParameters(dampingRatio: 0.8, initialVelocity: velocityVector)
+                modalAnimator.continueAnimation(withTimingParameters: spring, durationFactor: 0)
+//                let velocityThreshold: CGFloat = 8.0
+//                let dy = abs(velocityVector.dy)
+//                let damping = dy > velocityThreshold ? 0.3 : 1.0
+//                print(velocity.y)
+//                let spring = UISpringTimingParameters(dampingRatio: CGFloat(damping), frequencyResponse: 0.3, initialVelocity: velocityVector)
+//                let sp2 = UISpringTimingParameters(dampingRatio: 0.1, initialVelocity: velocityVector)
+//                modalAnimator.continueAnimation(withTimingParameters: spring, durationFactor: 1)
+            } else {
                 modalAnimator.pauseAnimation()
                 remainigMiddleDistance = maxDistance - (maxDistance * modalAnimator.fractionComplete) - middleModalPoint
                 modalAnimator.stopAnimation(false)
@@ -218,17 +239,6 @@ class HalfModalViewController: UIViewController {
                 modalAnimator.startAnimation()
                 modalAnimator.pauseAnimation()
                 modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 1)
-            } else if currentState.isTopArea(point: fractionComplete, velocity: velocity) {
-                modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
-//                let remainingDistance = maxDistance - (maxDistance * modalAnimator.fractionComplete)
-//                let velocityVector = (remainingDistance != 0) ? CGVector(dx: 0, dy: max(min(velocity.y/remainingDistance, 30.0), -30.0)) : .zero
-//                let velocityThreshold: CGFloat = 8.0
-//                let dy = abs(velocityVector.dy)
-//                let damping = dy > velocityThreshold ? 0.3 : 1.0
-//                print(velocity.y)
-//                let spring = UISpringTimingParameters(dampingRatio: CGFloat(damping), frequencyResponse: 0.3, initialVelocity: velocityVector)
-//                let sp2 = UISpringTimingParameters(dampingRatio: 0.1, initialVelocity: velocityVector)
-//                modalAnimator.continueAnimation(withTimingParameters: spring, durationFactor: 1)
             }
         default: ()
         }
