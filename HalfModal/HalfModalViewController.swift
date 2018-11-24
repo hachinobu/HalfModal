@@ -124,7 +124,7 @@ class HalfModalViewController: UIViewController {
     }
     
     private func generateModalAnimator(duration: TimeInterval) {
-        let animator = UIViewPropertyAnimator(duration: 10, dampingRatio: 0.9) { [weak self] in
+        let animator = UIViewPropertyAnimator(duration: 1, dampingRatio: 0.9) { [weak self] in
             guard let self = self else { return }
             switch self.currentState {
             case .bottom:
@@ -174,7 +174,7 @@ class HalfModalViewController: UIViewController {
     }
     
     private func generateOverlayAnimator(duration: TimeInterval) {
-        let animator = UIViewPropertyAnimator(duration: 10, dampingRatio: 0.9) { [weak self] in
+        let animator = UIViewPropertyAnimator(duration: 1, curve: .easeOut) { [weak self] in
             guard let self = self else { return }
             switch self.currentState {
             case .bottom:
@@ -207,6 +207,7 @@ class HalfModalViewController: UIViewController {
                     isCommingMiddle = false
                     modalAnimator.stopAnimation(false)
                     modalAnimator.finishAnimation(at: .current)
+                    overlayAnimator.stopAnimation(true)
                     generateModalAnimator(duration: 1)
                     generateOverlayAnimator(duration: 1)
                 } else {
@@ -220,7 +221,7 @@ class HalfModalViewController: UIViewController {
                 currentState = .bottom
                 modalBottomConstraint.constant = maxDistance
                 view.layoutIfNeeded()
-                animationProgress = (maxDistance - middleModalPoint) / maxDistance
+                animationProgress = bottomToMiddleDistance / maxDistance
                 generateModalAnimator(duration: 1)
                 generateOverlayAnimator(duration: 1)
             } else {
@@ -231,7 +232,6 @@ class HalfModalViewController: UIViewController {
             
             modalAnimator.startAnimation()
             modalAnimator.pauseAnimation()
-            modalAnimator.fractionComplete = animationProgress
             
             overlayAnimator.startAnimation()
             overlayAnimator.pauseAnimation()
@@ -252,10 +252,10 @@ class HalfModalViewController: UIViewController {
             let velocity = recognizer.velocity(in: modalView)
             if currentState.isBeginningArea(point: fractionComplete, velocity: velocity, middleFractionPoint: middleFractionPoint) {
                 modalAnimator.isReversed = true
-                modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 1)
+                modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
                 
                 overlayAnimator.isReversed = true
-                overlayAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 1)
+                overlayAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
             } else if currentState.isEndArea(point: fractionComplete, velocity: velocity, middleFractionPoint: middleFractionPoint) {
                 let remainingDistance = maxDistance - (maxDistance * modalAnimator.fractionComplete)
                 let velocityVector = (remainingDistance != 0) ? CGVector(dx: 0, dy: velocity.y/remainingDistance) : .zero
@@ -295,14 +295,15 @@ class HalfModalViewController: UIViewController {
                 }
                 isCommingMiddle = true
                 modalAnimator.startAnimation()
-                modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0.5)
+                modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
                 
-                overlayAnimator.stopAnimation(true)
+                overlayAnimator.stopAnimation(false)
+                overlayAnimator.finishAnimation(at: .current)
                 overlayAnimator.addAnimations {
-                    self.overlayView.alpha = 0
+                    self.overlayView.alpha = 0.0
                 }
                 overlayAnimator.startAnimation()
-                overlayAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0.5)
+                overlayAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
             }
         default: ()
         }
