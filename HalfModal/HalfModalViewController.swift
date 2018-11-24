@@ -196,10 +196,10 @@ class HalfModalViewController: UIViewController {
                     let currentDistance: CGFloat
                     switch currentState {
                     case .bottom:
-                        currentDistance = maxDistance - (remainigMiddleDistance * (1 - modalAnimator.fractionComplete)) - middleModalPoint
+                        currentDistance = bottomToMiddleDistance - (remainigMiddleDistance * (1 - modalAnimator.fractionComplete))
                         modalBottomConstraint.constant = maxDistance
                     case .top:
-                        currentDistance = (middleModalPoint - remainigMiddleDistance) + remainigMiddleDistance * modalAnimator.fractionComplete
+                        currentDistance = (middleToTopDistance - remainigMiddleDistance) + remainigMiddleDistance * modalAnimator.fractionComplete
                         modalBottomConstraint.constant = 0
                     case .middle: fatalError()
                     }
@@ -274,7 +274,8 @@ class HalfModalViewController: UIViewController {
                 //To Middle
                 
                 modalAnimator.pauseAnimation()
-                remainigMiddleDistance = maxDistance - (maxDistance * modalAnimator.fractionComplete) - middleModalPoint
+                let toMiddleDistance: CGFloat = currentState == .bottom ? bottomToMiddleDistance : middleToTopDistance
+                remainigMiddleDistance = toMiddleDistance - (maxDistance * modalAnimator.fractionComplete)
                 modalAnimator.stopAnimation(false)
                 modalAnimator.finishAnimation(at: .current)
                 modalAnimator.addAnimations {
