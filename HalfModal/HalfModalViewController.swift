@@ -52,9 +52,18 @@ class HalfModalViewController: UIViewController {
     private var middleFractionPoint: CGFloat {
         return (maxDistance - middleModalPoint) / maxDistance
     }
+    private var bottomToMiddleDistance: CGFloat {
+        return maxDistance - middleModalPoint
+    }
+    private var middleToTopDistance: CGFloat {
+        return maxDistance - bottomToMiddleDistance
+    }
     private var modalBottomConstraint = NSLayoutConstraint()
+    
     private var modalAnimator = UIViewPropertyAnimator()
     private var animationProgress: CGFloat = 0.0
+    private var overlayAnimator = UIViewPropertyAnimator()
+    
     private var remainigMiddleDistance: CGFloat = 0.0
     private var isCommingMiddle = false
     private var currentState: State = .bottom
@@ -74,6 +83,14 @@ class HalfModalViewController: UIViewController {
         view.layer.shadowRadius = 10
         return view
     }()
+    
+    private lazy var overlayView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .black
+        view.alpha = 0.0
+        view.isUserInteractionEnabled = false
+        return view
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -82,6 +99,17 @@ class HalfModalViewController: UIViewController {
     }
     
     private func setupLayout() {
+        overlayView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(overlayView)
+        NSLayoutConstraint.activate(
+            [
+                overlayView.topAnchor.constraint(equalTo: view.topAnchor),
+                overlayView.leftAnchor.constraint(equalTo: view.leftAnchor),
+                overlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+                overlayView.rightAnchor.constraint(equalTo: view.rightAnchor)
+            ]
+        )
+        
         modalView.translatesAutoresizingMaskIntoConstraints = false
         modalBottomConstraint = modalView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: maxDistance)
         view.addSubview(modalView)
@@ -145,6 +173,20 @@ class HalfModalViewController: UIViewController {
         modalAnimator = animator
     }
     
+    private func generateOverlayAnimator(duration: TimeInterval) {
+        let animator = UIViewPropertyAnimator(duration: 10, dampingRatio: 0.9) { [weak self] in
+            guard let self = self else { return }
+            switch self.currentState {
+            case .bottom:
+                self.overlayView.alpha = 0.2
+            case .top:
+                self.overlayView.alpha = 0.0
+            case .middle: fatalError()
+            }
+        }
+        overlayAnimator = animator
+    }
+    
     @objc private func modalViewPanned(recognizer: UIPanGestureRecognizer) {
         switch recognizer.state {
         case .began:
@@ -166,9 +208,13 @@ class HalfModalViewController: UIViewController {
                     modalAnimator.stopAnimation(false)
                     modalAnimator.finishAnimation(at: .current)
                     generateModalAnimator(duration: 1)
+                    generateOverlayAnimator(duration: 1)
                 } else {
                     animationProgress = modalAnimator.isReversed ? 1 - modalAnimator.fractionComplete : modalAnimator.fractionComplete
-                    if modalAnimator.isReversed { modalAnimator.isReversed.toggle() }
+                    if modalAnimator.isReversed {
+                        modalAnimator.isReversed.toggle()
+                        overlayAnimator.isReversed.toggle()
+                    }
                 }
             } else if case .middle = currentState {
                 currentState = .bottom
@@ -176,38 +222,47 @@ class HalfModalViewController: UIViewController {
                 view.layoutIfNeeded()
                 animationProgress = (maxDistance - middleModalPoint) / maxDistance
                 generateModalAnimator(duration: 1)
+                generateOverlayAnimator(duration: 1)
             } else {
                 animationProgress = 0.0
                 generateModalAnimator(duration: 1)
+                generateOverlayAnimator(duration: 1)
             }
             
             modalAnimator.startAnimation()
             modalAnimator.pauseAnimation()
             modalAnimator.fractionComplete = animationProgress
             
+            overlayAnimator.startAnimation()
+            overlayAnimator.pauseAnimation()
+            
         case .changed:
             let translation = recognizer.translation(in: modalView)
             switch currentState {
             case .bottom:
                 modalAnimator.fractionComplete = -translation.y / maxDistance + animationProgress
+                overlayAnimator.fractionComplete = ((maxDistance * modalAnimator.fractionComplete) - bottomToMiddleDistance) / middleToTopDistance
             case .top:
                 modalAnimator.fractionComplete = translation.y / maxDistance + animationProgress
+                overlayAnimator.fractionComplete = (maxDistance * modalAnimator.fractionComplete) / middleToTopDistance
             case .middle: fatalError()
             }
-            print(modalAnimator.fractionComplete)
         case .ended:
             let fractionComplete = modalAnimator.fractionComplete
             let velocity = recognizer.velocity(in: modalView)
-//            print(fractionComplete)
-            print(velocity)
             if currentState.isBeginningArea(point: fractionComplete, velocity: velocity, middleFractionPoint: middleFractionPoint) {
                 modalAnimator.isReversed = true
                 modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 1)
+                
+                overlayAnimator.isReversed = true
+                overlayAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 1)
             } else if currentState.isEndArea(point: fractionComplete, velocity: velocity, middleFractionPoint: middleFractionPoint) {
                 let remainingDistance = maxDistance - (maxDistance * modalAnimator.fractionComplete)
                 let velocityVector = (remainingDistance != 0) ? CGVector(dx: 0, dy: velocity.y/remainingDistance) : .zero
                 let spring = UISpringTimingParameters(dampingRatio: 0.8, initialVelocity: velocityVector)
                 modalAnimator.continueAnimation(withTimingParameters: spring, durationFactor: 0)
+                overlayAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
+                
 //                let velocityThreshold: CGFloat = 8.0
 //                let dy = abs(velocityVector.dy)
 //                let damping = dy > velocityThreshold ? 0.3 : 1.0
@@ -216,6 +271,8 @@ class HalfModalViewController: UIViewController {
 //                let sp2 = UISpringTimingParameters(dampingRatio: 0.1, initialVelocity: velocityVector)
 //                modalAnimator.continueAnimation(withTimingParameters: spring, durationFactor: 1)
             } else {
+                //To Middle
+                
                 modalAnimator.pauseAnimation()
                 remainigMiddleDistance = maxDistance - (maxDistance * modalAnimator.fractionComplete) - middleModalPoint
                 modalAnimator.stopAnimation(false)
@@ -237,8 +294,14 @@ class HalfModalViewController: UIViewController {
                 }
                 isCommingMiddle = true
                 modalAnimator.startAnimation()
-                modalAnimator.pauseAnimation()
-                modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 1)
+                modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0.5)
+                
+                overlayAnimator.stopAnimation(true)
+                overlayAnimator.addAnimations {
+                    self.overlayView.alpha = 0
+                }
+                overlayAnimator.startAnimation()
+                overlayAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0.5)
             }
         default: ()
         }
