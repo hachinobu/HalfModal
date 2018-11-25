@@ -17,18 +17,7 @@ class HalfModalViewController: UIViewController {
                 fatalError()
             }
         }
-        
-//        func isMiddleArea(point: CGFloat, velocity: CGPoint) -> Bool {
-//            switch self {
-//            case .bottom:
-//                return 0.2..<0.65 ~= point
-//            case .top:
-//                return 0.35..<0.8 ~= point
-//            case .middle:
-//                fatalError()
-//            }
-//        }
-        
+                
         func isEndArea(point: CGFloat, velocity: CGPoint, middleFractionPoint: CGFloat) -> Bool {
             switch self {
             case .bottom:
@@ -251,8 +240,11 @@ class HalfModalViewController: UIViewController {
             let fractionComplete = modalAnimator.fractionComplete
             let velocity = recognizer.velocity(in: modalView)
             if currentState.isBeginningArea(point: fractionComplete, velocity: velocity, middleFractionPoint: middleFractionPoint) {
+                let remainingDistance = maxDistance * modalAnimator.fractionComplete
+                let velocityVector = (remainingDistance != 0) ? CGVector(dx: 0, dy: velocity.y/remainingDistance) : .zero
+                let spring = UISpringTimingParameters(dampingRatio: 0.8, initialVelocity: velocityVector)
                 modalAnimator.isReversed = true
-                modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
+                modalAnimator.continueAnimation(withTimingParameters: spring, durationFactor: 0)
                 
                 overlayAnimator.isReversed = true
                 overlayAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
@@ -262,19 +254,10 @@ class HalfModalViewController: UIViewController {
                 let spring = UISpringTimingParameters(dampingRatio: 0.8, initialVelocity: velocityVector)
                 modalAnimator.continueAnimation(withTimingParameters: spring, durationFactor: 0)
                 overlayAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
-                
-//                let velocityThreshold: CGFloat = 8.0
-//                let dy = abs(velocityVector.dy)
-//                let damping = dy > velocityThreshold ? 0.3 : 1.0
-//                print(velocity.y)
-//                let spring = UISpringTimingParameters(dampingRatio: CGFloat(damping), frequencyResponse: 0.3, initialVelocity: velocityVector)
-//                let sp2 = UISpringTimingParameters(dampingRatio: 0.1, initialVelocity: velocityVector)
-//                modalAnimator.continueAnimation(withTimingParameters: spring, durationFactor: 1)
             } else {
                 //To Middle
-                
                 modalAnimator.pauseAnimation()
-                let toMiddleDistance: CGFloat = currentState == .bottom ? bottomToMiddleDistance : middleToTopDistance
+                let toMiddleDistance = currentState == .bottom ? bottomToMiddleDistance : middleToTopDistance
                 remainigMiddleDistance = toMiddleDistance - (maxDistance * modalAnimator.fractionComplete)
                 modalAnimator.stopAnimation(false)
                 modalAnimator.finishAnimation(at: .current)
@@ -294,8 +277,10 @@ class HalfModalViewController: UIViewController {
                     self.view.layoutIfNeeded()
                 }
                 isCommingMiddle = true
+                let velocityVector = (remainigMiddleDistance != 0) ? CGVector(dx: 0, dy: velocity.y/remainigMiddleDistance) : .zero
+                let spring = UISpringTimingParameters(dampingRatio: 0.8, initialVelocity: velocityVector)
                 modalAnimator.startAnimation()
-                modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
+                modalAnimator.continueAnimation(withTimingParameters: spring, durationFactor: 0)
                 
                 overlayAnimator.stopAnimation(false)
                 overlayAnimator.finishAnimation(at: .current)
@@ -310,12 +295,3 @@ class HalfModalViewController: UIViewController {
     }
 
 }
-
-//extension UISpringTimingParameters {
-//    public convenience init(dampingRatio: CGFloat, frequencyResponse: CGFloat, initialVelocity: CGVector = .zero) {
-//        let mass = 1 as CGFloat
-//        let stiffness = pow(2 * .pi / frequencyResponse, 2) * mass
-//        let damp = 4 * .pi * dampingRatio * mass / frequencyResponse
-//        self.init(mass: mass, stiffness: stiffness, damping: damp, initialVelocity: initialVelocity)
-//    }
-//}
