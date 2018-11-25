@@ -14,6 +14,7 @@
 		AD147DC1219D93270035AAAD /* HalfModalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD147DC0219D93270035AAAD /* HalfModalTests.swift */; };
 		AD147DCC219D98B50035AAAD /* HalfModalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD147DCB219D98B50035AAAD /* HalfModalViewController.swift */; };
 		AD147DCE219DA7EF0035AAAD /* InstantPanGestureRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD147DCD219DA7EF0035AAAD /* InstantPanGestureRecognizer.swift */; };
+		AD147DD021AABE530035AAAD /* UISpringTimingParameters+Ex.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD147DCF21AABE530035AAAD /* UISpringTimingParameters+Ex.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,6 +39,7 @@
 		AD147DC2219D93270035AAAD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AD147DCB219D98B50035AAAD /* HalfModalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HalfModalViewController.swift; sourceTree = "<group>"; };
 		AD147DCD219DA7EF0035AAAD /* InstantPanGestureRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantPanGestureRecognizer.swift; sourceTree = "<group>"; };
+		AD147DCF21AABE530035AAAD /* UISpringTimingParameters+Ex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UISpringTimingParameters+Ex.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +84,7 @@
 				AD147DAB219D93250035AAAD /* AppDelegate.swift */,
 				AD147DCB219D98B50035AAAD /* HalfModalViewController.swift */,
 				AD147DCD219DA7EF0035AAAD /* InstantPanGestureRecognizer.swift */,
+				AD147DCF21AABE530035AAAD /* UISpringTimingParameters+Ex.swift */,
 				AD147DAF219D93250035AAAD /* Main.storyboard */,
 				AD147DB2219D93270035AAAD /* Assets.xcassets */,
 				AD147DB4219D93270035AAAD /* LaunchScreen.storyboard */,
@@ -203,6 +206,7 @@
 				AD147DCC219D98B50035AAAD /* HalfModalViewController.swift in Sources */,
 				AD147DAC219D93250035AAAD /* AppDelegate.swift in Sources */,
 				AD147DCE219DA7EF0035AAAD /* InstantPanGestureRecognizer.swift in Sources */,
+				AD147DD021AABE530035AAAD /* UISpringTimingParameters+Ex.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

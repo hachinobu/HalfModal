@@ -173,20 +173,36 @@ class HalfModalViewController: UIViewController {
             let fractionComplete = modalAnimator.fractionComplete
             let velocity = recognizer.velocity(in: modalView)
             if currentState.isBeginningArea(point: fractionComplete, velocity: velocity, middleFractionPoint: middleFractionPoint) {
-                let remainingDistance = maxDistance * modalAnimator.fractionComplete
-                let velocityVector = (remainingDistance != 0) ? CGVector(dx: 0, dy: velocity.y/remainingDistance) : .zero
-                let spring = UISpringTimingParameters(dampingRatio: 0.8, initialVelocity: velocityVector)
+                let remainingFraction = 1 - modalAnimator.fractionComplete
+                let remainingDistance = maxDistance * remainingFraction
                 modalAnimator.isReversed = true
-                modalAnimator.continueAnimation(withTimingParameters: spring, durationFactor: 0)
-                
                 overlayAnimator.isReversed = true
-                overlayAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
+                if remainingDistance == 0 {
+                    modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
+                    overlayAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
+                } else {
+                    let relativeVelocity = abs(velocity.y) / remainingDistance
+                    let timigParameters = UISpringTimingParameters(damping: 0.8, response: 0.3, initialVelocity: CGVector(dx: relativeVelocity, dy: relativeVelocity))
+                    let newDuration = UIViewPropertyAnimator(duration: 0, timingParameters: timigParameters).duration
+                    let durationFactor = CGFloat(newDuration/modalAnimator.duration)
+                    modalAnimator.continueAnimation(withTimingParameters: timigParameters, durationFactor: durationFactor)
+                    overlayAnimator.continueAnimation(withTimingParameters: timigParameters, durationFactor: durationFactor)
+                }
+                                
             } else if currentState.isEndArea(point: fractionComplete, velocity: velocity, middleFractionPoint: middleFractionPoint) {
-                let remainingDistance = maxDistance - (maxDistance * modalAnimator.fractionComplete)
-                let velocityVector = (remainingDistance != 0) ? CGVector(dx: 0, dy: velocity.y/remainingDistance) : .zero
-                let spring = UISpringTimingParameters(dampingRatio: 0.8, initialVelocity: velocityVector)
-                modalAnimator.continueAnimation(withTimingParameters: spring, durationFactor: 0)
-                overlayAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
+                let remainingFraction = 1 - modalAnimator.fractionComplete
+                let remainingDistance = maxDistance * remainingFraction
+                if remainingDistance == 0 {
+                    modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
+                    overlayAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
+                } else {
+                    let relativeVelocity = abs(velocity.y) / remainingDistance
+                    let timigParameters = UISpringTimingParameters(damping: 0.8, response: 0.3, initialVelocity: CGVector(dx: relativeVelocity, dy: relativeVelocity))
+                    let newDuration = UIViewPropertyAnimator(duration: 0, timingParameters: timigParameters).duration
+                    let durationFactor = CGFloat(newDuration/modalAnimator.duration)
+                    modalAnimator.continueAnimation(withTimingParameters: timigParameters, durationFactor: durationFactor)
+                    overlayAnimator.continueAnimation(withTimingParameters: timigParameters, durationFactor: durationFactor)
+                }
             } else {
                 //To Middle
                 modalAnimator.pauseAnimation()
@@ -209,11 +225,9 @@ class HalfModalViewController: UIViewController {
                     }
                     self.view.layoutIfNeeded()
                 }
+                
                 isCommingMiddle = true
-                let velocityVector = (remainigMiddleDistance != 0) ? CGVector(dx: 0, dy: velocity.y/remainigMiddleDistance) : .zero
-                let spring = UISpringTimingParameters(dampingRatio: 0.8, initialVelocity: velocityVector)
                 modalAnimator.startAnimation()
-                modalAnimator.continueAnimation(withTimingParameters: spring, durationFactor: 0)
                 
                 overlayAnimator.stopAnimation(false)
                 overlayAnimator.finishAnimation(at: .current)
@@ -221,7 +235,18 @@ class HalfModalViewController: UIViewController {
                     self.overlayView.alpha = 0.0
                 }
                 overlayAnimator.startAnimation()
-                overlayAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
+                
+                if remainigMiddleDistance == 0 {
+                    modalAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
+                    overlayAnimator.continueAnimation(withTimingParameters: nil, durationFactor: 0)
+                } else {
+                    let relativeVelocity = abs(velocity.y) / remainigMiddleDistance
+                    let timigParameters = UISpringTimingParameters(damping: 0.8, response: 0.3, initialVelocity: CGVector(dx: relativeVelocity, dy: relativeVelocity))
+                    let newDuration = UIViewPropertyAnimator(duration: 0, timingParameters: timigParameters).duration
+                    let durationFactor = CGFloat(newDuration/modalAnimator.duration)
+                    modalAnimator.continueAnimation(withTimingParameters: timigParameters, durationFactor: durationFactor)
+                    overlayAnimator.continueAnimation(withTimingParameters: timigParameters, durationFactor: durationFactor)
+                }
             }
         default: ()
         }
