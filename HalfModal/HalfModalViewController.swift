@@ -112,70 +112,6 @@ class HalfModalViewController: UIViewController {
         )
     }
     
-    private func generateModalAnimator(duration: TimeInterval) {
-        let animator = UIViewPropertyAnimator(duration: 1, dampingRatio: 0.9) { [weak self] in
-            guard let self = self else { return }
-            switch self.currentState {
-            case .bottom:
-                self.modalBottomConstraint.constant = 0
-            case .top:
-                self.modalBottomConstraint.constant = self.maxDistance
-            case .middle: fatalError()
-            }
-            self.view.layoutIfNeeded()
-        }
-        animator.addCompletion { [weak self] position in
-            guard let self = self else { return }
-            if case .bottom = self.currentState {
-                switch position {
-                case .start:
-                    self.modalBottomConstraint.constant = self.maxDistance
-                    self.currentState = .bottom
-                case .end:
-                    self.modalBottomConstraint.constant = 0
-                    self.currentState = .top
-                case .current: ()
-                }
-            } else if case .middle = self.currentState {
-                switch position {
-                case .start:
-                    self.modalBottomConstraint.constant = self.maxDistance
-                    self.currentState = .bottom
-                case .end:
-                    self.modalBottomConstraint.constant = 0
-                    self.currentState = .top
-                case .current: ()
-                }
-            } else if case .top = self.currentState {
-                switch position {
-                case .start:
-                    self.modalBottomConstraint.constant = 0
-                    self.currentState = .top
-                case .end:
-                    self.modalBottomConstraint.constant = self.maxDistance
-                    self.currentState = .bottom
-                case .current: ()
-                }
-            }
-            self.view.layoutIfNeeded()
-        }
-        modalAnimator = animator
-    }
-    
-    private func generateOverlayAnimator(duration: TimeInterval) {
-        let animator = UIViewPropertyAnimator(duration: 1, curve: .easeOut) { [weak self] in
-            guard let self = self else { return }
-            switch self.currentState {
-            case .bottom:
-                self.overlayView.alpha = 0.2
-            case .top:
-                self.overlayView.alpha = 0.0
-            case .middle: fatalError()
-            }
-        }
-        overlayAnimator = animator
-    }
-    
     @objc private func modalViewPanned(recognizer: UIPanGestureRecognizer) {
         switch recognizer.state {
         case .began:
@@ -197,8 +133,7 @@ class HalfModalViewController: UIViewController {
                     modalAnimator.stopAnimation(false)
                     modalAnimator.finishAnimation(at: .current)
                     overlayAnimator.stopAnimation(true)
-                    generateModalAnimator(duration: 1)
-                    generateOverlayAnimator(duration: 1)
+                    generateAnimator(duration: 1)
                 } else {
                     animationProgress = modalAnimator.isReversed ? 1 - modalAnimator.fractionComplete : modalAnimator.fractionComplete
                     if modalAnimator.isReversed {
@@ -211,12 +146,10 @@ class HalfModalViewController: UIViewController {
                 modalBottomConstraint.constant = maxDistance
                 view.layoutIfNeeded()
                 animationProgress = bottomToMiddleDistance / maxDistance
-                generateModalAnimator(duration: 1)
-                generateOverlayAnimator(duration: 1)
+                generateAnimator(duration: 1)
             } else {
                 animationProgress = 0.0
-                generateModalAnimator(duration: 1)
-                generateOverlayAnimator(duration: 1)
+                generateAnimator(duration: 1)
             }
             
             modalAnimator.startAnimation()
@@ -294,4 +227,77 @@ class HalfModalViewController: UIViewController {
         }
     }
 
+}
+
+extension HalfModalViewController {
+    
+    private func generateAnimator(duration: TimeInterval) {
+        modalAnimator = generateModalAnimator(duration: duration)
+        overlayAnimator = generateOverlayAnimator(duration: duration)
+    }
+    
+    private func generateModalAnimator(duration: TimeInterval) -> UIViewPropertyAnimator {
+        let animator = UIViewPropertyAnimator(duration: 1, dampingRatio: 0.9) { [weak self] in
+            guard let self = self else { return }
+            switch self.currentState {
+            case .bottom:
+                self.modalBottomConstraint.constant = 0
+            case .top:
+                self.modalBottomConstraint.constant = self.maxDistance
+            case .middle: fatalError()
+            }
+            self.view.layoutIfNeeded()
+        }
+        animator.addCompletion { [weak self] position in
+            guard let self = self else { return }
+            if case .bottom = self.currentState {
+                switch position {
+                case .start:
+                    self.modalBottomConstraint.constant = self.maxDistance
+                    self.currentState = .bottom
+                case .end:
+                    self.modalBottomConstraint.constant = 0
+                    self.currentState = .top
+                case .current: ()
+                }
+            } else if case .middle = self.currentState {
+                switch position {
+                case .start:
+                    self.modalBottomConstraint.constant = self.maxDistance
+                    self.currentState = .bottom
+                case .end:
+                    self.modalBottomConstraint.constant = 0
+                    self.currentState = .top
+                case .current: ()
+                }
+            } else if case .top = self.currentState {
+                switch position {
+                case .start:
+                    self.modalBottomConstraint.constant = 0
+                    self.currentState = .top
+                case .end:
+                    self.modalBottomConstraint.constant = self.maxDistance
+                    self.currentState = .bottom
+                case .current: ()
+                }
+            }
+            self.view.layoutIfNeeded()
+        }
+        return animator
+    }
+    
+    private func generateOverlayAnimator(duration: TimeInterval) -> UIViewPropertyAnimator {
+        let animator = UIViewPropertyAnimator(duration: 1, curve: .easeOut) { [weak self] in
+            guard let self = self else { return }
+            switch self.currentState {
+            case .bottom:
+                self.overlayView.alpha = 0.2
+            case .top:
+                self.overlayView.alpha = 0.0
+            case .middle: fatalError()
+            }
+        }
+        return animator
+    }
+    
 }
