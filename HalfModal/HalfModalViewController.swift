@@ -133,7 +133,7 @@ class HalfModalViewController: UIViewController {
                     modalAnimator.stopAnimation(false)
                     modalAnimator.finishAnimation(at: .current)
                     overlayAnimator.stopAnimation(true)
-                    generateAnimator(duration: 1)
+                    generateAnimator()
                 } else {
                     animationProgress = modalAnimator.isReversed ? 1 - modalAnimator.fractionComplete : modalAnimator.fractionComplete
                     if modalAnimator.isReversed {
@@ -146,10 +146,10 @@ class HalfModalViewController: UIViewController {
                 modalBottomConstraint.constant = maxDistance
                 view.layoutIfNeeded()
                 animationProgress = bottomToMiddleDistance / maxDistance
-                generateAnimator(duration: 1)
+                generateAnimator()
             } else {
                 animationProgress = 0.0
-                generateAnimator(duration: 1)
+                generateAnimator()
             }
             
             modalAnimator.startAnimation()
@@ -188,7 +188,6 @@ class HalfModalViewController: UIViewController {
                     modalAnimator.continueAnimation(withTimingParameters: timigParameters, durationFactor: durationFactor)
                     overlayAnimator.continueAnimation(withTimingParameters: timigParameters, durationFactor: durationFactor)
                 }
-                                
             } else if currentState.isEndArea(point: fractionComplete, velocity: velocity, middleFractionPoint: middleFractionPoint) {
                 let remainingFraction = 1 - modalAnimator.fractionComplete
                 let remainingDistance = maxDistance * remainingFraction
@@ -256,13 +255,13 @@ class HalfModalViewController: UIViewController {
 
 extension HalfModalViewController {
     
-    private func generateAnimator(duration: TimeInterval) {
+    private func generateAnimator(duration: TimeInterval = 1.0) {
         modalAnimator = generateModalAnimator(duration: duration)
         overlayAnimator = generateOverlayAnimator(duration: duration)
     }
     
     private func generateModalAnimator(duration: TimeInterval) -> UIViewPropertyAnimator {
-        let animator = UIViewPropertyAnimator(duration: 1, dampingRatio: 0.9) { [weak self] in
+        let animator = UIViewPropertyAnimator(duration: duration, dampingRatio: 0.9) { [weak self] in
             guard let self = self else { return }
             switch self.currentState {
             case .bottom:
@@ -312,7 +311,7 @@ extension HalfModalViewController {
     }
     
     private func generateOverlayAnimator(duration: TimeInterval) -> UIViewPropertyAnimator {
-        let animator = UIViewPropertyAnimator(duration: 1, curve: .easeOut) { [weak self] in
+        let animator = UIViewPropertyAnimator(duration: duration, curve: .easeOut) { [weak self] in
             guard let self = self else { return }
             switch self.currentState {
             case .bottom:
