@@ -35,6 +35,7 @@ class HalfModalViewController: UIViewController {
     private var maxDistance: CGFloat {
         return modalViewHeight - 60
     }
+    private let topConstantPoint: CGFloat = 20
     private var middleConstantPoint: CGFloat {
         return maxDistance * 0.7
     }
@@ -270,7 +271,7 @@ extension HalfModalViewController {
             guard let self = self else { return }
             switch self.currentArea {
             case .bottom:
-                self.modalViewBottomConstraint.constant = 0
+                self.modalViewBottomConstraint.constant = self.topConstantPoint
             case .top:
                 self.modalViewBottomConstraint.constant = self.maxDistance
             case .middle: fatalError()
@@ -284,12 +285,12 @@ extension HalfModalViewController {
                     self.modalViewBottomConstraint.constant = self.maxDistance
                     self.currentArea = .bottom
                 } else if position == .end {
-                    self.modalViewBottomConstraint.constant = 0
+                    self.modalViewBottomConstraint.constant = self.topConstantPoint
                     self.currentArea = .top
                 }
             case .top:
                 if position == .start {
-                    self.modalViewBottomConstraint.constant = 0
+                    self.modalViewBottomConstraint.constant = self.topConstantPoint
                     self.currentArea = .top
                 } else if position == .end {
                     self.modalViewBottomConstraint.constant = self.maxDistance
