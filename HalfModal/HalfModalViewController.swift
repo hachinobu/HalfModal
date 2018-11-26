@@ -251,7 +251,7 @@ class HalfModalViewController: UIViewController {
 
 extension HalfModalViewController {
     
-    private func generateAnimator(duration: TimeInterval = 3.0) {
+    private func generateAnimator(duration: TimeInterval = 1.0) {
         // Fix:  Terminating app due to uncaught exception 'NSInternalInconsistencyException', reason: 'It is an error to release a paused or stopped property animator. Property animators must either finish animating or be explicitly stopped and finished before they can be released.'
         do {
             if modalAnimator.state == .active {
