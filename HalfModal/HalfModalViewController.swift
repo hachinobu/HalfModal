@@ -251,6 +251,16 @@ class HalfModalViewController: UIViewController {
 extension HalfModalViewController {
     
     private func generateAnimator(duration: TimeInterval = 3.0) {
+        // Fix:  Terminating app due to uncaught exception 'NSInternalInconsistencyException', reason: 'It is an error to release a paused or stopped property animator. Property animators must either finish animating or be explicitly stopped and finished before they can be released.'
+        do {
+            if modalAnimator.state == .active {
+                stopModalAnimator()
+            }
+            if overlayAnimator.state == .active {
+                stopOverlayAnimator()
+            }
+        }
+        
         modalAnimator = generateModalAnimator(duration: duration)
         overlayAnimator = generateOverlayAnimator(duration: duration)
     }
@@ -315,9 +325,16 @@ extension HalfModalViewController {
     }
     
     private func stopAnimator() {
+        stopModalAnimator()
+        stopOverlayAnimator()
+    }
+    
+    private func stopModalAnimator() {
         modalAnimator.stopAnimation(false)
         modalAnimator.finishAnimation(at: .current)
-        
+    }
+    
+    private func stopOverlayAnimator() {
         overlayAnimator.stopAnimation(true)
     }
     
