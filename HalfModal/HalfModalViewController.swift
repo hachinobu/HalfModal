@@ -91,6 +91,8 @@ class HalfModalViewController: UIViewController {
     }
     
     private func setupLayout() {
+        view.backgroundColor = UIColor(red: 239/255, green: 239/255, blue: 244/255, alpha: 1.0)
+        
         overlayView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(overlayView)
         NSLayoutConstraint.activate(
