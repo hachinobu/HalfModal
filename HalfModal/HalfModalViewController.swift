@@ -115,6 +115,20 @@ class HalfModalViewController: UIViewController {
                 modalView.heightAnchor.constraint(equalToConstant: modalViewHeight)
             ]
         )
+        
+        let barView = UIView()
+        barView.backgroundColor = .lightGray
+        barView.translatesAutoresizingMaskIntoConstraints = false
+        barView.layer.cornerRadius = 2.5
+        modalView.addSubview(barView)
+        NSLayoutConstraint.activate(
+            [
+                barView.topAnchor.constraint(equalTo: modalView.topAnchor, constant: 8.0),
+                barView.widthAnchor.constraint(equalToConstant: 40.0),
+                barView.heightAnchor.constraint(equalToConstant: 5.0),
+                barView.centerXAnchor.constraint(equalTo: modalView.centerXAnchor)
+            ]
+        )
     }
     
     @objc private func modalViewPanned(recognizer: UIPanGestureRecognizer) {
