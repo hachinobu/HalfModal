@@ -2,7 +2,7 @@ import UIKit
 
 class HalfModalViewController: UIViewController {
     
-    private enum Area {
+    private enum ModalPosition {
         case top
         case middle
         case bottom
@@ -33,20 +33,20 @@ class HalfModalViewController: UIViewController {
     
     private let modalViewHeight: CGFloat = UIScreen.main.bounds.height - 64
     private var maxDistance: CGFloat {
-        return modalViewHeight - 60 - topAreaConstantPoint
+        return modalViewHeight - 60 - topPositionConstant
     }
-    private let topAreaConstantPoint: CGFloat = 0.0
-    private var middleAreaConstantPoint: CGFloat {
+    private let topPositionConstant: CGFloat = 0.0
+    private var middlePositionConstant: CGFloat {
         return maxDistance * 0.7
     }
-    private var bottomAreaConstantPoint: CGFloat {
+    private var bottomPositionConstant: CGFloat {
         return maxDistance
     }
-    private var middleAreaFractionValue: CGFloat {
+    private var middlePositionFractionValue: CGFloat {
         return bottomToMiddleDistance / maxDistance
     }
     private var bottomToMiddleDistance: CGFloat {
-        return maxDistance - middleAreaConstantPoint
+        return maxDistance - middlePositionConstant
     }
     private var middleToTopDistance: CGFloat {
         return maxDistance - bottomToMiddleDistance
@@ -58,7 +58,7 @@ class HalfModalViewController: UIViewController {
     
     private var remainigToMiddleDistance: CGFloat = 0.0
     private var isRunningToMiddle = false
-    private var currentArea: Area = .bottom
+    private var currentModalPosition: ModalPosition = .bottom
     
     private lazy var modalPanRecognizer: InstantPanGestureRecognizer = {
         let panRecognizer = InstantPanGestureRecognizer()
@@ -142,7 +142,7 @@ class HalfModalViewController: UIViewController {
             
         case .changed:
             let translation = recognizer.translation(in: modalView)
-            switch currentArea {
+            switch currentModalPosition {
             case .bottom:
                 modalAnimator.fractionComplete = -translation.y / maxDistance + modalAnimatorProgress
                 overlayAnimator.fractionComplete = ((maxDistance * modalAnimator.fractionComplete) - bottomToMiddleDistance) / middleToTopDistance
@@ -162,11 +162,11 @@ class HalfModalViewController: UIViewController {
     
     private func beganInteractionAnimator() {
         if !modalAnimator.isRunning {
-            if currentArea == .middle {
-                currentArea = .bottom
-                modalViewBottomConstraint.constant = bottomAreaConstantPoint
+            if currentModalPosition == .middle {
+                currentModalPosition = .bottom
+                modalViewBottomConstraint.constant = bottomPositionConstant
                 view.layoutIfNeeded()
-                modalAnimatorProgress = middleAreaFractionValue
+                modalAnimatorProgress = middlePositionFractionValue
             } else {
                 modalAnimatorProgress = 0.0
             }
@@ -175,13 +175,13 @@ class HalfModalViewController: UIViewController {
             modalAnimator.pauseAnimation()
             isRunningToMiddle.toggle()
             let currentConstantPoint: CGFloat
-            switch currentArea {
+            switch currentModalPosition {
             case .bottom:
                 currentConstantPoint = bottomToMiddleDistance - remainigToMiddleDistance * (1 - modalAnimator.fractionComplete)
-                modalViewBottomConstraint.constant = bottomAreaConstantPoint
+                modalViewBottomConstraint.constant = bottomPositionConstant
             case .top:
                 currentConstantPoint = (middleToTopDistance - remainigToMiddleDistance) + remainigToMiddleDistance * modalAnimator.fractionComplete
-                modalViewBottomConstraint.constant = topAreaConstantPoint
+                modalViewBottomConstraint.constant = topPositionConstant
             case .middle: fatalError()
             }
             modalAnimatorProgress = currentConstantPoint / maxDistance
@@ -200,9 +200,9 @@ class HalfModalViewController: UIViewController {
     
     private func continueInteractionAnimator(velocity: CGPoint) {
         let fractionComplete = modalAnimator.fractionComplete
-        if currentArea.isBeginningArea(fractionPoint: fractionComplete, velocity: velocity, middleAreaBorderPoint: middleAreaFractionValue) {
+        if currentModalPosition.isBeginningArea(fractionPoint: fractionComplete, velocity: velocity, middleAreaBorderPoint: middlePositionFractionValue) {
             begginingAreaContinueInteractionAnimator(velocity: velocity)
-        } else if currentArea.isEndArea(fractionPoint: fractionComplete, velocity: velocity, middleAreaBorderPoint: middleAreaFractionValue) {
+        } else if currentModalPosition.isEndArea(fractionPoint: fractionComplete, velocity: velocity, middleAreaBorderPoint: middlePositionFractionValue) {
             endAreaContinueInteractionAnimator(velocity: velocity)
         } else {
             middleAreaContinueInteractionAnimator(velocity: velocity)
@@ -238,20 +238,20 @@ class HalfModalViewController: UIViewController {
     private func middleAreaContinueInteractionAnimator(velocity: CGPoint) {
         modalAnimator.pauseAnimation()
         overlayAnimator.pauseAnimation()
-        let toMiddleDistance = currentArea == .bottom ? bottomToMiddleDistance : middleToTopDistance
+        let toMiddleDistance = currentModalPosition == .bottom ? bottomToMiddleDistance : middleToTopDistance
         remainigToMiddleDistance = toMiddleDistance - (maxDistance * modalAnimator.fractionComplete)
         
         stopAnimator()
         modalAnimator.addAnimations {
-            self.modalViewBottomConstraint.constant = self.middleAreaConstantPoint
+            self.modalViewBottomConstraint.constant = self.middlePositionConstant
             self.view.layoutIfNeeded()
         }
         modalAnimator.addCompletion { position in
             self.isRunningToMiddle = false
             switch position {
             case .end:
-                self.currentArea = .middle
-                self.modalViewBottomConstraint.constant = self.middleAreaConstantPoint
+                self.currentModalPosition = .middle
+                self.modalViewBottomConstraint.constant = self.middlePositionConstant
             case .start, .current: ()
             }
             self.view.layoutIfNeeded()
@@ -287,32 +287,32 @@ extension HalfModalViewController {
     
     private func generateModalAnimator(duration: TimeInterval) -> UIViewPropertyAnimator {
         let animator = UIViewPropertyAnimator(duration: duration, dampingRatio: 1.0) {
-            switch self.currentArea {
+            switch self.currentModalPosition {
             case .bottom:
-                self.modalViewBottomConstraint.constant = self.topAreaConstantPoint
+                self.modalViewBottomConstraint.constant = self.topPositionConstant
             case .top:
-                self.modalViewBottomConstraint.constant = self.bottomAreaConstantPoint
+                self.modalViewBottomConstraint.constant = self.bottomPositionConstant
             case .middle: fatalError()
             }
             self.view.layoutIfNeeded()
         }
         animator.addCompletion { position in
-            switch self.currentArea {
+            switch self.currentModalPosition {
             case .bottom:
                 if position == .start {
-                    self.modalViewBottomConstraint.constant = self.bottomAreaConstantPoint
-                    self.currentArea = .bottom
+                    self.modalViewBottomConstraint.constant = self.bottomPositionConstant
+                    self.currentModalPosition = .bottom
                 } else if position == .end {
-                    self.modalViewBottomConstraint.constant = self.topAreaConstantPoint
-                    self.currentArea = .top
+                    self.modalViewBottomConstraint.constant = self.topPositionConstant
+                    self.currentModalPosition = .top
                 }
             case .top:
                 if position == .start {
-                    self.modalViewBottomConstraint.constant = self.topAreaConstantPoint
-                    self.currentArea = .top
+                    self.modalViewBottomConstraint.constant = self.topPositionConstant
+                    self.currentModalPosition = .top
                 } else if position == .end {
-                    self.modalViewBottomConstraint.constant = self.bottomAreaConstantPoint
-                    self.currentArea = .bottom
+                    self.modalViewBottomConstraint.constant = self.bottomPositionConstant
+                    self.currentModalPosition = .bottom
                 }
             case .middle: fatalError()
             }
@@ -323,7 +323,7 @@ extension HalfModalViewController {
     
     private func generateOverlayAnimator(duration: TimeInterval) -> UIViewPropertyAnimator {
         let animator = UIViewPropertyAnimator(duration: duration, curve: .easeOut) {
-            switch self.currentArea {
+            switch self.currentModalPosition {
             case .bottom:
                 self.overlayView.alpha = 0.2
             case .top:
