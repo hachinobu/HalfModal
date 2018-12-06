@@ -181,7 +181,7 @@ class HalfModalViewController: UIViewController {
                 modalViewBottomConstraint.constant = bottomAreaConstantPoint
             case .top:
                 currentConstantPoint = (middleToTopDistance - remainigToMiddleDistance) + remainigToMiddleDistance * modalAnimator.fractionComplete
-                modalViewBottomConstraint.constant = 0
+                modalViewBottomConstraint.constant = topAreaConstantPoint
             case .middle: fatalError()
             }
             modalAnimatorProgress = currentConstantPoint / maxDistance
